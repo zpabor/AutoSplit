@@ -17,7 +17,7 @@ namespace AutoSplitSrv
     {
         private string resumeFile = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @".AutoSplit\resume.dat";
         private FileSystemWatcher fswSplitDir;
-        private List<string> incompleteSplits = new List<string>();
+        private List<string> jobs = new List<string>();
         public AutoSplitSrv()
         {
             InitializeComponent();
@@ -30,14 +30,21 @@ namespace AutoSplitSrv
 
         protected override void OnStart(string[] args)
         {
+            FileStream fs = new FileStream(resumeFile, FileMode.Open, FileAccess.Read);
+            BinaryFormatter bf = new BinaryFormatter();
+            jobs = (List<string>)bf.Deserialize(fs);
             fswSplitDir.EnableRaisingEvents = true;
+            foreach (string job in jobs)
+            {
+                SplitTask(job).Start();
+            }
         }
 
         protected override void OnStop()
         {
             FileStream fs = new FileStream(resumeFile, FileMode.Create, FileAccess.Write);
             BinaryFormatter bf = new BinaryFormatter();
-            bf.Serialize(fs, incompleteSplits);
+            bf.Serialize(fs, jobs);
             fswSplitDir.EnableRaisingEvents = false;
         }
         public void OnFileCreated(object sender, FileSystemEventArgs e)
@@ -47,14 +54,14 @@ namespace AutoSplitSrv
         private async Task SplitTask(string path)
         {
             FileStream fsTest = await getFileStream(path);
-            incompleteSplits.Add(path);
+            jobs.Add(path);
             fsTest.Lock(0, fsTest.Length);
             if (fsTest.Length > 1470)
             {
                 FileSplitter fs = new FileSplitter(fsTest, path);
                 fs.Split();
             }
-            incompleteSplits.RemoveAt(incompleteSplits.IndexOf(path));
+            jobs.RemoveAt(jobs.IndexOf(path));
         } 
         private async Task<FileStream> getFileStream(string filepath)
         {
