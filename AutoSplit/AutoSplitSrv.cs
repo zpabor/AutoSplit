@@ -15,7 +15,7 @@ namespace AutoSplitSrv
 {
     public partial class AutoSplitSrv : ServiceBase
     {
-        private string resumeFile = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @".AutoSplit\resume.dat";
+        private string resumeFile = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\AutoSplit\resume.dat";
         private FileSystemWatcher fswSplitDir;
         private List<string> jobs = new List<string>();
         public AutoSplitSrv()
@@ -23,21 +23,28 @@ namespace AutoSplitSrv
             InitializeComponent();
             fswSplitDir = new FileSystemWatcher("C:\\Users\\paborza.AUTH\\OneDrive for Business");
             fswSplitDir.Created += new FileSystemEventHandler(this.OnFileCreated);            
-            Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @".AutoSplit");
+            Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\AutoSplit");
     
 
         }
 
         protected override void OnStart(string[] args)
         {
-            FileStream fs = new FileStream(resumeFile, FileMode.Open, FileAccess.Read);
+            //System.Threading.Thread.Sleep(20000);
+            FileStream fs = new FileStream(resumeFile, FileMode.OpenOrCreate, FileAccess.Read);
             BinaryFormatter bf = new BinaryFormatter();
-            jobs = (List<string>)bf.Deserialize(fs);
+            if(fs.Length > 0)
+                jobs = (List<string>)bf.Deserialize(fs);
             fswSplitDir.EnableRaisingEvents = true;
-            foreach (string job in jobs)
+            
+            if (jobs.Count > 0 & jobs != null)
             {
-                SplitTask(job).Start();
+                foreach (string job in jobs)
+                {
+                    SplitTask(job).Start();
+                }
             }
+            fs.Close();
         }
 
         protected override void OnStop()
@@ -49,7 +56,7 @@ namespace AutoSplitSrv
         }
         public void OnFileCreated(object sender, FileSystemEventArgs e)
         {
-            SplitTask(e.FullPath).Start();
+            Task.Run(()=> SplitTask(e.FullPath));
         }
         private async Task SplitTask(string path)
         {
