@@ -17,9 +17,10 @@ namespace SpliceUtilities
     {
         FileMetaData InputFileMeta = new FileMetaData();
         string _chunkPath;
-        const int BUFFER_SIZE = 4096 * 1024;
+        const int BUFFER_SIZE = 4096 * 1024;       
         private byte[] buffer = new Byte[BUFFER_SIZE];
-        private static uint chunksize = 524288000  ;
+        public static uint CHUNK_SIZE = 524288000  ;
+        public static const uint MAX_FILE_SIZE = 2147483648;
 
         private FileStream fsInputFile;
 
@@ -42,7 +43,7 @@ namespace SpliceUtilities
         {            
             RingBuffer ringbuff = new RingBuffer(32, 3);
             int bytesread;            
-            ushort chunkCount = (ushort)Math.Ceiling((float)fsInputFile.Length / (float)(chunksize));
+            ushort chunkCount = (ushort)Math.Ceiling((float)fsInputFile.Length / (float)(CHUNK_SIZE));
             InputFileMeta.NumParts = chunkCount;
             int sleepcounter = 0;
             Task.Run( () =>
@@ -62,7 +63,7 @@ namespace SpliceUtilities
                 byte[] tmpbuff;// = new byte[BUFFER_SIZE];
                 uint chunkBytesWritten = 0;
                 long totalBytesWritten = 0;
-                uint currentChunkSize = chunksize;
+                uint currentChunkSize = CHUNK_SIZE;
                 FileStream fsChunk;
                 for (int i = 0; i < chunkCount; i++)
                 {
@@ -96,13 +97,13 @@ namespace SpliceUtilities
             {
                 MD5 chunkMD5;
                 byte[] tmpbuff = new byte[BUFFER_SIZE];
-                uint currentChunkSize = chunksize;
+                uint currentChunkSize = CHUNK_SIZE;
                 for (int i = 0; i < chunkCount; i++)
                 {
                     chunkMD5 = MD5.Create();
                     chunkMD5.Initialize();
                     if (i == chunkCount - 1)
-                        currentChunkSize = (uint)fsInputFile.Length - (uint)(chunksize * (chunkCount - 1));
+                        currentChunkSize = (uint)fsInputFile.Length - (uint)(CHUNK_SIZE * (chunkCount - 1));
                     for (int ia = 0; ia < (currentChunkSize / tmpbuff.Length) - 1; ia++)
                     {
                         tmpbuff = ringbuff.readNext();

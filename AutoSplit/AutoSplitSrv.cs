@@ -53,20 +53,21 @@ namespace AutoSplitSrv
             BinaryFormatter bf = new BinaryFormatter();
             bf.Serialize(fs, jobs);
             fswSplitDir.EnableRaisingEvents = false;
+            fs.Close();
         }
         public void OnFileCreated(object sender, FileSystemEventArgs e)
         {
-            Task.Run(()=> SplitTask(e.FullPath));
+            Task.Run(()=> SplitTask(e.FullPath), );
         }
         private async Task SplitTask(string path)
         {
             FileStream fsTest = await getFileStream(path);
             jobs.Add(path);
             fsTest.Lock(0, fsTest.Length);
-            if (fsTest.Length > 1470)
+            if (fsTest.Length > FileSplitter.MAX_FILE_SIZE)
             {
-                FileSplitter fs = new FileSplitter(fsTest, path);
-                fs.Split();
+                FileSplitter fsplit = new FileSplitter(fsTest, path);
+                fsplit.Split();
             }
             jobs.RemoveAt(jobs.IndexOf(path));
         } 
