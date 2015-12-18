@@ -57,7 +57,7 @@ namespace AutoSplitSrv
         }
         public void OnFileCreated(object sender, FileSystemEventArgs e)
         {
-            Task.Run(()=> SplitTask(e.FullPath), );
+            Task.Run(()=> SplitTask(e.FullPath));
         }
         private async Task SplitTask(string path)
         {

@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoSplit", "AutoSplit\Auto
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSplitter", "FileSplitter\FileSplitter.csproj", "{0C2E85CC-E9FB-4A06-89D3-7B53EBC1504F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASFileJoiner", "ASFileJoiner\ASFileJoiner.csproj", "{ED994A81-99F2-4640-A37E-3DF0C42BC418}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{0C2E85CC-E9FB-4A06-89D3-7B53EBC1504F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0C2E85CC-E9FB-4A06-89D3-7B53EBC1504F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0C2E85CC-E9FB-4A06-89D3-7B53EBC1504F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED994A81-99F2-4640-A37E-3DF0C42BC418}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED994A81-99F2-4640-A37E-3DF0C42BC418}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED994A81-99F2-4640-A37E-3DF0C42BC418}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED994A81-99F2-4640-A37E-3DF0C42BC418}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
