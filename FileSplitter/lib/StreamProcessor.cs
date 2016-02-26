@@ -20,7 +20,7 @@ namespace FileSplitter
             outputStream = outstream;
             _rbuff = rbuffinit;
         }  
-        private void CreateTask()
+        public void CreateTask()
         {
             Task processorTask = new Task(() =>
             {
@@ -42,18 +42,30 @@ namespace FileSplitter
 
     class StreamProcessorController
     {
-        List<StreamProcessor> _streamProcList;
+        List<Task> _taskList;
         private RingBuffer _rbuff;
+        private bool _isComplete = false;
+        public bool isComplete { get { return _isComplete; } }
         public void Start()
         {
-            _rbuff = new RingBuffer(1024, taskset.Length);
-            foreach (Task t in taskset)
-                t.Start();      
+            _rbuff = new RingBuffer(1024, _taskList.Count);
+
+            foreach (Task t in _taskList)            
+                t.Start();
+            Wait();                                                              
+        }
+        private void Wait() 
+        {
+            Task.Run(() =>
+            {
+                Task.WaitAll(_taskList.ToArray());
+                _isComplete = true;
+            });            
         }
         public void addProcessor(StreamProcessor newStreamProc)
         {
-            newStreamProc.ringbuffer = _rbuff;
-            _streamProcList.Add(newStreamProc);
+            newStreamProc.ringbuffer = _rbuff;            
+            _taskList.Add(newStreamProc.proctask);
         }
     }
 }
