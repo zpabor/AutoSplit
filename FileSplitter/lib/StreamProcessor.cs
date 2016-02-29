@@ -5,45 +5,50 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
+using System.Security.Cryptography;
+
 namespace FileSplitter
 {
     abstract class StreamProcessor
     {
         public RingBuffer ringbuffer { set { _rbuff = value; } }
-        private RingBuffer _rbuff;      
+        private RingBuffer _rbuff;
+        protected byte[] buff;     
         public Stream outputStream { set { _outputStream = value; } }
         private Stream _outputStream;
         private Task _task;
         public Task proctask { get { if (_task == null) CreateTask(); return _task; } }
-        public StreamProcessor(Stream outstream, ref RingBuffer rbuffinit)
-        {
-            outputStream = outstream;
-            _rbuff = rbuffinit;
-        }  
+        //protected byte[] buff;
+        
         public void CreateTask()
         {
             Task processorTask = new Task(() =>
             {
-                byte[] tmpbuff = new byte[1];
+                byte[] buff = new byte[1];
                 
-                for (long ia = 0; ia < (_outputStream.Length / tmpbuff.Length) - 1; ia++)
+                for (long ia = 0; ia < (_outputStream.Length / buff.Length) - 1; ia++)
                 {
-                    tmpbuff = _rbuff.readNext();
-                    buffworker(ref tmpbuff);                   
+                    buff = _rbuff.readNext();
+                    buffWorker();                   
                 }
-                tmpbuff = _rbuff.readNext();
-                buffworker(ref tmpbuff);                
+                buff = _rbuff.readNext();
+                buffWorker();
+                buffFinallize();                
             });
             _task = processorTask;
         }
-        public abstract void buffworker(ref byte[] objectivebuffer);
+        protected abstract void buffWorker();
+
+        protected abstract void buffFinalize();        
     }
 
 
     class StreamProcessorController
     {
+        protected RingBuffer _rbuff;
+       
         List<Task> _taskList;
-        private RingBuffer _rbuff;
+       
         private bool _isComplete = false;
         public bool isComplete { get { return _isComplete; } }
         public void Start()
@@ -66,6 +71,18 @@ namespace FileSplitter
         {
             newStreamProc.ringbuffer = _rbuff;            
             _taskList.Add(newStreamProc.proctask);
+        }
+    }
+    class MD5_StreamProcessor : StreamProcessor
+    {
+        MD5 md5 = MD5.Create();
+        protected override void buffWorker()
+        {
+            md5.TransformBlock(buff, 0, buff.Length, null, 0);
+        }
+        protected void buffFinalize()
+        {
+            md5.TransformFinalBlock(buff, buff.Length, 0);
         }
     }
 }
