@@ -17,11 +17,10 @@ namespace FileSplitter
         public Stream outputStream { set { _outputStream = value; } }
         private Stream _outputStream;
         private Task _task;
-        public Task proctask { get { if (_task == null) CreateTask(); return _task; } }
-        //protected byte[] buff;
-        
+        public Task proctask { get { if (_task == null) CreateTask(); return _task; } }                             
         public void CreateTask()
         {
+          
             Task processorTask = new Task(() =>
             {
                 byte[] buff = new byte[1];
@@ -29,18 +28,19 @@ namespace FileSplitter
                 for (long ia = 0; ia < (_outputStream.Length / buff.Length) - 1; ia++)
                 {
                     buff = _rbuff.readNext();
-                    buffWorker();                   
+                    buffWorker();
+                    _outputStream.Write(buff, 0, 0);                  
                 }
                 buff = _rbuff.readNext();
-                buffWorker();
-                buffFinallize();                
+                buffWorker();                
+                buffFinalize();
+                _outputStream.Close();               
             });
             _task = processorTask;
         }
-        protected abstract void buffWorker();
-
-        protected abstract void buffFinalize();        
-    }
+        abstract protected void buffWorker();
+        virtual protected void buffFinalize(){return;}        
+    }    
 
 
     class StreamProcessorController
@@ -80,7 +80,7 @@ namespace FileSplitter
         {
             md5.TransformBlock(buff, 0, buff.Length, null, 0);
         }
-        protected void buffFinalize()
+        protected override void buffFinalize()
         {
             md5.TransformFinalBlock(buff, buff.Length, 0);
         }
