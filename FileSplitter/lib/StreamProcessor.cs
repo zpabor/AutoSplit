@@ -8,12 +8,17 @@ using System.IO;
 using System.Security.Cryptography;
 
 namespace FileSplitter
-{
-    abstract class StreamProcessor
+{   
+    class StreamProcessorBase
     {
+
+    }   
+    abstract class StreamProcessor
+    {              
         public RingBuffer ringbuffer { set { _rbuff = value; } }
         private RingBuffer _rbuff;
-        protected byte[] buff;     
+        protected byte[] _buff;
+        public byte[] buffer { set { _buff = value; } }     
         public Stream outputStream { set { _outputStream = value; } }
         private Stream _outputStream;
         private Task _task;
@@ -46,15 +51,29 @@ namespace FileSplitter
     class StreamProcessorController
     {
         protected RingBuffer _rbuff;
-       
+        private Stream inputStream;
         List<Task> _taskList;
        
         private bool _isComplete = false;
         public bool isComplete { get { return _isComplete; } }
+        private byte[] _buff = new byte[1];
+        protected long bytesread;
         public void Start()
         {
+            
+                        
             _rbuff = new RingBuffer(1024, _taskList.Count);
-
+            Task.Run(() =>
+            {
+                do
+                {
+                    bytesread = inputStream.Read(_buff, 0, _buff.Length);
+                    _rbuff.writeNext(_buff);
+                    //sleepcounter++;
+                    //if (sleepcounter == 16)
+                    //    await Task.Delay(1000);
+                } while (bytesread > 0);
+            });
             foreach (Task t in _taskList)            
                 t.Start();
             Wait();                                                              
@@ -68,21 +87,23 @@ namespace FileSplitter
             });            
         }
         public void addProcessor(StreamProcessor newStreamProc)
-        {
-            newStreamProc.ringbuffer = _rbuff;            
+        {                     
+            newStreamProc.ringbuffer = _rbuff;
+            newStreamProc.buffer = _buff;              
             _taskList.Add(newStreamProc.proctask);
         }
-    }
+    }    
     class MD5_StreamProcessor : StreamProcessor
-    {
+    {             
         MD5 md5 = MD5.Create();
         protected override void buffWorker()
-        {
-            md5.TransformBlock(buff, 0, buff.Length, null, 0);
+        {   
+                     
+            md5.TransformBlock(_buff, 0, _buff.Length, null, 0);
         }
         protected override void buffFinalize()
         {
-            md5.TransformFinalBlock(buff, buff.Length, 0);
+            md5.TransformFinalBlock(_buff, _buff.Length, 0);
         }
     }
 }
