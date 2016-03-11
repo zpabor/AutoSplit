@@ -9,11 +9,8 @@ using System.Security.Cryptography;
 
 namespace FileSplitter
 {   
-    class StreamProcessorBase
-    {
-
-    }   
-    abstract class StreamProcessor
+    internal class test { } 
+    abstract class StreamProcessorBase
     {              
         public RingBuffer ringbuffer { set { _rbuff = value; } }
         private RingBuffer _rbuff;
@@ -104,6 +101,7 @@ namespace FileSplitter
         protected override void buffFinalize()
         {
             md5.TransformFinalBlock(_buff, _buff.Length, 0);
+            
         }
     }
 }
