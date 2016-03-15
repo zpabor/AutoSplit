@@ -11,7 +11,11 @@ namespace FileSplitter
 {   
     internal class test { } 
     abstract class StreamProcessorBase
-    {              
+    {
+        private long _length;
+        public long LengthToProcess { set { _length = value; _lengthIsSet = true; } }
+        private bool _lengthIsSet = false;
+        public bool lenghthIsSet { get { return _lengthIsSet; } }        
         public RingBuffer ringbuffer { set { _rbuff = value; } }
         private RingBuffer _rbuff;
         protected byte[] _buff;
@@ -27,7 +31,7 @@ namespace FileSplitter
             {
                 byte[] buff = new byte[1];
                 
-                for (long ia = 0; ia < (_outputStream.Length / buff.Length) - 1; ia++)
+                for (long ia = 0; ia < (_length / buff.Length) - 1; ia++)
                 {
                     buff = _rbuff.readNext();
                     buffWorker();
@@ -48,8 +52,9 @@ namespace FileSplitter
     class StreamProcessorController
     {
         protected RingBuffer _rbuff;
-        private Stream inputStream;
-        List<Task> _taskList;
+        private Stream _inputStream;
+        public Stream inputStream { set { _inputStream = value;} }
+        List<Task> _taskList = new List<Task>();
        
         private bool _isComplete = false;
         public bool isComplete { get { return _isComplete; } }
@@ -64,7 +69,7 @@ namespace FileSplitter
             {
                 do
                 {
-                    bytesread = inputStream.Read(_buff, 0, _buff.Length);
+                    bytesread = _inputStream.Read(_buff, 0, _buff.Length);
                     _rbuff.writeNext(_buff);
                     //sleepcounter++;
                     //if (sleepcounter == 16)
@@ -83,25 +88,31 @@ namespace FileSplitter
                 _isComplete = true;
             });            
         }
-        public void addProcessor(StreamProcessor newStreamProc)
+        public void addProcessor(StreamProcessorBase newStreamProc)
         {                     
             newStreamProc.ringbuffer = _rbuff;
-            newStreamProc.buffer = _buff;              
+            newStreamProc.buffer = _buff;
+            if (!newStreamProc.lenghthIsSet)
+                newStreamProc.LengthToProcess = _inputStream.Length;             
             _taskList.Add(newStreamProc.proctask);
         }
     }    
-    class MD5_StreamProcessor : StreamProcessor
-    {             
-        MD5 md5 = MD5.Create();
+    class MD5_StreamProcessor : StreamProcessorBase
+    {
+        MD5 md5;
+        public byte[] result { get { return md5.Hash; } }
+        public MD5_StreamProcessor()
+        {
+            md5 = MD5.Create();
+            md5.Initialize();
+        }
         protected override void buffWorker()
-        {   
-                     
+        {                        
             md5.TransformBlock(_buff, 0, _buff.Length, null, 0);
         }
         protected override void buffFinalize()
         {
-            md5.TransformFinalBlock(_buff, _buff.Length, 0);
-            
+            md5.TransformFinalBlock(_buff, _buff.Length, 0);            
         }
     }
 }
