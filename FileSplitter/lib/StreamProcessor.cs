@@ -6,18 +6,25 @@ using System.Threading.Tasks;
 using System.IO;
 
 using System.Security.Cryptography;
-
-namespace FileSplitter
+using FileSplitter;
+namespace StreamProcessorNS
 {   
-    internal class test { } 
-    abstract class StreamProcessorBase
+    internal class StreamProcessorBase
+    {
+        protected RingBuffer _rbuff;         
+        protected void _rbuffSetInputToLocal(StreamProcessorBase input) { input._rbuff = _rbuff; }
+
+        protected byte[] _buff;
+        protected void _buffSetInputToLocal(StreamProcessorBase input) { input._buff = _buff; }
+    } 
+    abstract class StreamProcessor:StreamProcessorBase
     {
         private long _length;
         public long LengthToProcess { set { _length = value; _lengthIsSet = true; } }
         private bool _lengthIsSet = false;
         public bool lenghthIsSet { get { return _lengthIsSet; } }        
-        public RingBuffer ringbuffer { set { _rbuff = value; } }
-        private RingBuffer _rbuff;
+        //public RingBuffer ringbuffer { set { _rbuff = value; } }
+        //private RingBuffer _rbuff;
         protected byte[] _buff;
         public byte[] buffer { set { _buff = value; } }     
         public Stream outputStream { set { _outputStream = value; } }
@@ -49,16 +56,16 @@ namespace FileSplitter
     }    
 
 
-    class StreamProcessorController
+    class StreamProcessorController:StreamProcessorBase
     {
-        protected RingBuffer _rbuff;
+        //protected RingBuffer _rbuff;
         private Stream _inputStream;
         public Stream inputStream { set { _inputStream = value;} }
         List<Task> _taskList = new List<Task>();
        
         private bool _isComplete = false;
         public bool isComplete { get { return _isComplete; } }
-        private byte[] _buff = new byte[1];
+        //private byte[] _buff = new byte[1];
         protected long bytesread;
         public void Start()
         {
@@ -88,16 +95,16 @@ namespace FileSplitter
                 _isComplete = true;
             });            
         }
-        public void addProcessor(StreamProcessorBase newStreamProc)
+        public void addProcessor(StreamProcessor newStreamProc)
         {                     
-            newStreamProc.ringbuffer = _rbuff;
-            newStreamProc.buffer = _buff;
+            base._rbuffSetInputToLocal(newStreamProc);
+            base._buffSetInputToLocal(newStreamProc);
             if (!newStreamProc.lenghthIsSet)
                 newStreamProc.LengthToProcess = _inputStream.Length;             
             _taskList.Add(newStreamProc.proctask);
         }
     }    
-    class MD5_StreamProcessor : StreamProcessorBase
+    class MD5_StreamProcessor : StreamProcessor
     {
         MD5 md5;
         public byte[] result { get { return md5.Hash; } }
