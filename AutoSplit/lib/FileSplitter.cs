@@ -20,7 +20,7 @@ namespace SpliceUtilities
         const int BUFFER_SIZE = 4096 * 1024;       
         private byte[] buffer = new Byte[BUFFER_SIZE];
         public static uint CHUNK_SIZE = 524288000  ;
-        public static const uint MAX_FILE_SIZE = 2147483648;
+        public const uint MAX_FILE_SIZE = 2147483648;
 
         private FileStream fsInputFile;
 

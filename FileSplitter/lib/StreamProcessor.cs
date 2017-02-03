@@ -18,7 +18,7 @@ namespace StreamProcessorNS
         protected void _buffSetInputToLocal(StreamProcessorBase input) { input._buff = _buff; }
 
         protected Stream _IOStream;
-        protected void _IOStreamInputToLocal(StreamProcessorBase input) { input._IOStream = _IOStream}
+        protected void _IOStreamInputToLocal(StreamProcessorBase input) { input._IOStream = _IOStream; }
     } 
     abstract class StreamProcessor:StreamProcessorBase
     {
@@ -28,27 +28,37 @@ namespace StreamProcessorNS
         public bool lenghthIsSet { get { return _lengthIsSet; } }                             
         
         private Task _task;
-        public Task proctask { get { if (_task == null) CreateTask(); return _task; } }                             
-        public void CreateTask()
+        public Task proctask { get { if (_task == null) CreateTask(); return _task; } }
+        protected void TaskBody()
         {
-          
-            Task processorTask = new Task(() =>
+            byte[] buff = new byte[1];            
+            long length = _length;
+            for (long ia = 0; ia < (length / buff.Length) - 1; ia++)
             {
-                byte[] buff = new byte[1];
-                
-                for (long ia = 0; ia < (_length / buff.Length) - 1; ia++)
-                {
-                    buff = _rbuff.readNext();
-                    buffWorker();
-                    _IOStream.Write(buff, 0, 0);                  
-                }
                 buff = _rbuff.readNext();
-                buffWorker();                
-                buffFinalize();
-                _IOStream.Close();               
-            });           
-            _task = processorTask;
+                buffWorker();
+                _IOStream.Write(buff, 0, 0);
+            }
             
+            while (length > 0)
+            {
+                buff = _rbuff.readNext();
+                buffWorker();
+                _IOStream.Write(buff, 0, 0);
+                length -= buff.Length;
+            }
+
+            buff = _rbuff.readNext();
+            buffWorker();
+            buffFinalize();
+            _IOStream.Close();
+        }                             
+        public void CreateTask()
+        {          
+            Task _task = new Task(() =>
+            {                
+                TaskBody();             
+            });                        
         }
         virtual protected void buffWorker(){return;}
         virtual protected void buffFinalize(){return;}        
@@ -67,9 +77,7 @@ namespace StreamProcessorNS
         //private byte[] _buff = new byte[1];
         protected long bytesread;
         public void Start()
-        {
-            
-                        
+        {                                    
             _rbuff = new RingBuffer(1024, _taskList.Count);
             Task.Run(() =>
             {
@@ -122,13 +130,10 @@ namespace StreamProcessorNS
     }
     class StreamProcessorSplit : StreamProcessor
     {
-        List<Task> _TaskList = new List<Task>();
+        //List<Task> _TaskList = new List<Task>();
         void addnew()
-        {
-            CreateTask();
-            Task t = new Task()
-            _TaskList.Add(proctask);
-            t.ContinueWith( ()=> t);      
+        {                        
+            proctask.ContinueWith((antecedent) => TaskBody());                     
         }
     }
 }

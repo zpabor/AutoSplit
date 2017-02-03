@@ -5,9 +5,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
-
+using StreamProcessorNS;
 namespace FileSplitter
 {
+    
     class Program
     {
         static void Main(string[] args)
@@ -22,6 +23,16 @@ namespace FileSplitter
                 Thread.Sleep(1000);
             }
             */
+            MD5_StreamProcessor x = new MD5_StreamProcessor();
+            StreamProcessorController md5control = new StreamProcessorController();
+            //x.outputStream = new FileStream(@"c:\temp\chunk0.dat", FileMode.Open, FileAccess.Read);
+            md5control.inputStream = new FileStream(@"c:\temp\chunk0.dat", FileMode.Open, FileAccess.Read);
+            md5control.addProcessor(x);
+            md5control.Start();            
+            while (!md5control.isComplete)
+                Thread.Sleep(1000);
+            
+            Console.WriteLine(x.result);
 
 
             //FileSplitter fs = new FileSplitter("C:\\Users\\paborza.AUTH\\OneDrive for Business\\test2.iso");

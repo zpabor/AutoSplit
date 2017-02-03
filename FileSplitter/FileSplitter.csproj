@@ -48,6 +48,7 @@
     <Compile Include="lib\FileCombiner.cs" />
     <Compile Include="lib\FileMetaData.cs" />
     <Compile Include="lib\FileSplitter.cs" />
+    <Compile Include="lib\StreamProcessor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RingBuffer.cs" />
