@@ -69,7 +69,7 @@ namespace StreamProcessorNS
     {
         //protected RingBuffer _rbuff;
         //private Stream _inputStream;
-       // public Stream inputStream { set { _inputStream = value;} }
+        public Stream inputStream { set { _IOStream = value;} }
         List<Task> _taskList = new List<Task>();
        
         private bool _isComplete = false;
