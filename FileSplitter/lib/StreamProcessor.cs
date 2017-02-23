@@ -11,8 +11,9 @@ namespace StreamProcessorNS
 {   
     internal class StreamProcessorBase
     {
-        protected RingBuffer _rbuff;         
-        protected void _rbuffSetInputToLocal(StreamProcessorBase input) { input._rbuff = _rbuff; }
+        protected RingBuffer _rbuff;
+        protected RingBuffer setRingBuffer { set { _rbuff = value; } }         
+        protected void _rbuffSetInputToLocal(StreamProcessorBase input) {input._rbuff = _rbuff; }
 
         protected byte[] _buff;
         protected void _buffSetInputToLocal(StreamProcessorBase input) { input._buff = _buff; }
@@ -27,7 +28,7 @@ namespace StreamProcessorNS
         private bool _lengthIsSet = false;
         public bool lenghthIsSet { get { return _lengthIsSet; } }                             
         
-        private Task _task;
+        private Task _task;        
         public Task proctask { get { if (_task == null) CreateTask(); return _task; } }
         protected void TaskBody()
         {
@@ -55,7 +56,7 @@ namespace StreamProcessorNS
         }                             
         public void CreateTask()
         {          
-            Task _task = new Task(() =>
+            _task = new Task(() =>
             {                
                 TaskBody();             
             });                        
@@ -81,6 +82,7 @@ namespace StreamProcessorNS
             _rbuff = new RingBuffer(1024, _taskList.Count);
             Task.Run(() =>
             {
+                byte[] _buff = new byte[16];
                 do
                 {
                     bytesread = _IOStream.Read(_buff, 0, _buff.Length);
@@ -103,8 +105,9 @@ namespace StreamProcessorNS
             });            
         }
         public void addProcessor(StreamProcessor newStreamProc)
-        {                     
-            base._rbuffSetInputToLocal(newStreamProc);            
+        { 
+            newStreamProc.Set            
+            _rbuffSetInputToLocal(newStreamProc);            
             if (!newStreamProc.lenghthIsSet)
                 newStreamProc.LengthToProcess = _IOStream.Length;             
             _taskList.Add(newStreamProc.proctask);
